@@ -1,7 +1,9 @@
 import axios from "axios";
 
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8080";
+
 const API = axios.create({
-  baseURL: "http://localhost:8080/api/rooms",
+  baseURL: `${API_BASE}/api/rooms`,
 });
 
 export const createRoom = async (hostUserName) => {
@@ -29,6 +31,5 @@ export const submitAnswer = async (roomCode, userName, answer) => {
     userName: userName,
     answer: answer,
   });
-
   return response.data;
 };

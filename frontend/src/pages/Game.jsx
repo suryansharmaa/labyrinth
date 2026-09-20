@@ -35,7 +35,7 @@ export default function Game() {
     fetchState();
 
     const stompClient = new Client({
-      webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
+      webSocketFactory: () => new SockJS(import.meta.env.VITE_WS_URL),
       onConnect: () => {
         stompClient.subscribe(`/topic/room/${roomCode}`, (message) => {
           setRoomState(JSON.parse(message.body));
