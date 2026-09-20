@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -27,4 +29,9 @@ public class GameRoom {
     private Riddle currRiddle;
 
     private Instant startedAt;
+
+    @ElementCollection
+    @CollectionTable(name = "game_room_asked_riddles", joinColumns = @JoinColumn(name = "game_room_id"))
+    @Column(name = "riddle_id")
+    private Set<Long> askedRiddleIds = new HashSet<>();
 }

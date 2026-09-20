@@ -2,6 +2,7 @@ package com.projects.labyrinth.service;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -121,9 +122,6 @@ public class GameRoomService {
             throw new RuntimeException("Game is not active");
         }
 
-        System.out.println(
-                "DEBUG: Searching for player -> '" + submitAnswerDto.getUserName() + "' in room ID -> " + room.getId());
-
         Player player = playerRepository.findByGameRoomIdAndUserName(room.getId(), submitAnswerDto.getUserName())
                 .orElseThrow(() -> new RuntimeException("Player not found in this room"));
 
@@ -137,12 +135,30 @@ public class GameRoomService {
             player.setScore(player.getScore() + 10);
             playerRepository.save(player);
 
-            List<Riddle> allRiddles = riddleRepository.findAll();
-            int randomIndex = (int) (Math.random() * allRiddles.size());
-            room.setCurrRiddle(allRiddles.get(randomIndex));
-            gameRoomRepository.save(room);
+            System.out.println("DEBUG: Solved Riddle ID: " + currRiddle.getId());
+            room.getAskedRiddleIds().add(currRiddle.getId());
 
-            result.setMessage("Correct answer!");
+            List<Riddle> allRiddles = riddleRepository.findAll();
+            List<Riddle> availableRiddles = allRiddles.stream()
+                    .filter(r -> !room.getAskedRiddleIds().contains(r.getId()))
+                    .toList();
+
+            System.out.println("DEBUG: Remaining Riddles: " + availableRiddles.size());
+
+            if (availableRiddles.isEmpty()) {
+                System.out.println("DEBUG: Triggering FINISHED state.");
+                room.setStatus("FINISHED");
+                room.setCurrRiddle(null);
+                gameRoomRepository.save(room);
+                result.setMessage("Correct! Game Over!");
+            } else {
+                int randomIndex = (int) (Math.random() * availableRiddles.size());
+                Riddle nextRiddle = availableRiddles.get(randomIndex);
+                System.out.println("DEBUG: Assigned New Riddle ID: " + nextRiddle.getId());
+                room.setCurrRiddle(nextRiddle);
+                gameRoomRepository.save(room);
+                result.setMessage("Correct answer!");
+            }
         } else {
             result.setMessage("Incorrect. Try again.");
         }
